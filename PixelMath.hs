@@ -68,6 +68,14 @@ instance NumPixel HSVPixel HSVPixel HSVPixel where
     divPixel !(HSVPixel r1 g1 b1) !(HSVPixel r2 g2 b2) 
         = HSVPixel (safeDiv (r1 :: Word8) (r2 :: Word8)) (safeDiv (g1 :: Word8) (g2 :: Word8)) (safeDiv (b1 :: Word8) (b2 :: Word8))
 
+-- For use in converting rbg to lumichromi
+instance NumPixel RGBPixel GreyPixel RGBPixel where
+    addPixel !(RGBPixel r1 g1 b1) !(GreyPixel val) = RGBPixel (r1+val) (g1+val) (b1+val)
+    subPixel !(RGBPixel r1 g1 b1) !(GreyPixel val) = RGBPixel (r1-val) (g1-val) (b1-val)
+    multPixel !(RGBPixel r1 g1 b1) !(GreyPixel val) = RGBPixel (r1*val) (g1*val) (b1*val)
+    divPixel !(RGBPixel r1 g1 b1) !(GreyPixel val) 
+        = RGBPixel (safeDiv (r1 :: Word8) (val :: Word8)) (safeDiv (g1 :: Word8) (val :: Word8)) (safeDiv (b1 :: Word8) (val :: Word8))
+
 -- Need to define a RGBA instance for completeness at some point
 
 --- Big Pixel Combinations
@@ -92,6 +100,13 @@ instance NumPixel BigHSVPixel BigHSVPixel BigHSVPixel where
     divPixel !(BigHSVPixel r1 g1 b1) !(BigHSVPixel r2 g2 b2) 
         = BigHSVPixel (safeDiv (r1 :: Int16) (r2 :: Int16)) (safeDiv (g1 :: Int16) (g2 :: Int16)) (safeDiv (b1 :: Int16) (b2 :: Int16))
 
+-- For use in converting rbg to lumichromi
+instance NumPixel BigRGBPixel BigGreyPixel BigRGBPixel where
+    addPixel !(BigRGBPixel r1 g1 b1) !(BigGreyPixel val) = BigRGBPixel (r1+val) (g1+val) (b1+val)
+    subPixel !(BigRGBPixel r1 g1 b1) !(BigGreyPixel val) = BigRGBPixel (r1-val) (g1-val) (b1-val)
+    multPixel !(BigRGBPixel r1 g1 b1) !(BigGreyPixel val) = BigRGBPixel (r1*val) (g1*val) (b1*val)
+    divPixel !(BigRGBPixel r1 g1 b1) !(BigGreyPixel val) 
+        = BigRGBPixel (safeDiv (r1 :: Int16) (val :: Int16)) (safeDiv (g1 :: Int16) (val :: Int16)) (safeDiv (b1 :: Int16) (val :: Int16))
 
 -- Pixel operations, on all channels, with a constant value
 -- Most useful for division and multiplication.
