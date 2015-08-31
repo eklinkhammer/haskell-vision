@@ -15,7 +15,9 @@ module RobotVision.ImageRep.Class
     , RGB, RGBD, RGBU, RGBF, RGBI, RGBDW
     , Image
     , ToGrey (..)
-
+    , toRGB
+    , fromChannels
+    , toChannels
 ) where
 
 import Data.Array.Repa
@@ -24,6 +26,9 @@ import Data.Array.Repa.Repr.ForeignPtr          as F
 import Data.Word
 import Prelude hiding (map)
 import Data.Convertible
+import qualified Vision.Image as V
+import qualified Vision.Primitive as P
+
 test = id
 
 -- Image Representation for this project is limited to, strictly, RGB, Grey, and HSV Word8, Int, and Float
@@ -126,6 +131,10 @@ instance ToGrey RGBDW GreyDW where
   toGrey = combineImage rgbToGrey
   {-# INLINE toGrey #-}
 
+instance ToGrey GreyDW GreyDW where
+  toGrey = id
+  {-# INLINE toGrey #-}
+
 -- Takes a function to convert one rgb pixel into one grey pixel
 combineImage :: (Word8 -> Word8 -> Word8 -> Word8) -> RGBDW -> GreyDW
 combineImage f arr = let sh@(Z :. y :. x :. _) = extent arr in fromFunction (Z :. y :. x) g
@@ -145,3 +154,38 @@ rgbToGrey !r !g !b =
     bd = fromIntegral b :: Double
   in ceiling $ 0.21 * rd + 0.71 * gd + 0.07 * bd
 {-# INLINE rgbToGrey #-}
+
+-- Convert from RGBA or RGB (does nothing in that case)
+toRGB :: (Source r e, Num e) => Array r DIM3 e -> Array D DIM3 e
+toRGB img = 
+  let (Z :. width :. length :. depth) = extent img
+  in case depth of
+    3 -> map id img
+    4 -> fromFunction (Z :. width :. length :. 3) f
+    where
+      f (Z :. j :. i :. k) = img ! (Z :. j :. i :. k)
+
+toChannels :: (Source r e, Num e) 
+  => Array r DIM3 e -> (Array D DIM2 e, Array D DIM2 e, Array D DIM2 e)
+toChannels img = (r,g,b)
+  where
+    r = fromFunction (Z :. height :. width) rf
+    g = fromFunction (Z :. height :. width) gf
+    b = fromFunction (Z :. height :. width) bf
+    (Z :. height :. width :. _) = extent img
+    rf (Z :. y :. x) = img ! (Z :. y :. x :. 0)
+    gf (Z :. y :. x) = img ! (Z :. y :. x :. 1)
+    bf (Z :. y :. x) = img ! (Z :. y :. x :. 2)
+{-# INLINE toChannels #-}
+
+fromChannels :: (Source r e, Num e)
+  => (Array r DIM2 e, Array r DIM2 e, Array r DIM2 e) -> Array D DIM3 e
+fromChannels (r,g,b) =
+  let (Z :. width :. height) = extent r
+  in fromFunction (Z :. width :. height :. 3) f
+    where
+      f (Z :. y :. x :. z) = case z of
+                              0 -> r ! (Z :. y :. x)
+                              1 -> g ! (Z :. y :. x)
+                              2 -> b ! (Z :. y :. x)
+{-# INLINE fromChannels #-}
