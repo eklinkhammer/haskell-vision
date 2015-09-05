@@ -11,13 +11,11 @@ module RobotVision.ImageRep.Class
     , Shrinkable (..)
     , GreyImage
     , RGBImage
-    , Grey, GreyD, GreyU, GreyF, GreyI, GreyDW
+    , Grey, GreyD, GreyU, GreyF, GreyI, GreyDW, GreyUI
     , RGB, RGBD, RGBU, RGBF, RGBI, RGBDW
     , Image
     , ToGrey (..)
     , toRGB
-    , fromChannels
-    , toChannels
 ) where
 
 import Data.Array.Repa
@@ -66,7 +64,9 @@ type RGBI = RGB D Int
 type GreyDW = Grey D Word8
 type RGBDW = RGB D Word8
 
-data GreyImage = GreyI | GreyU | GreyF | GreyDW 
+type GreyUI = Grey U Int
+
+data GreyImage = GreyI | GreyU | GreyF | GreyDW | GreyUI
 data RGBImage = RGBI | RGBU | RGBF | RGBDW
 data Image = GreyImage | RGBImage
 
@@ -75,6 +75,10 @@ class Expandable a b | a -> b where
 
 instance Expandable GreyU GreyI where
     expand = map fromIntegral
+    {-# INLINE expand #-}
+
+instance Expandable GreyUI GreyI where
+    expand = map id
     {-# INLINE expand #-}
 
 instance Expandable GreyF GreyI where
@@ -109,6 +113,10 @@ class Shrinkable a b | a -> b where
     shrink :: a -> b
 
 instance Shrinkable GreyI GreyDW where
+    shrink = map (fromIntegral . max 0 . min 255)
+    {-# INLINE shrink #-}
+
+instance Shrinkable GreyUI GreyDW where
     shrink = map (fromIntegral . max 0 . min 255)
     {-# INLINE shrink #-}
 
@@ -164,28 +172,3 @@ toRGB img =
     4 -> fromFunction (Z :. width :. length :. 3) f
     where
       f (Z :. j :. i :. k) = img ! (Z :. j :. i :. k)
-
-toChannels :: (Source r e, Num e) 
-  => Array r DIM3 e -> (Array D DIM2 e, Array D DIM2 e, Array D DIM2 e)
-toChannels img = (r,g,b)
-  where
-    r = fromFunction (Z :. height :. width) rf
-    g = fromFunction (Z :. height :. width) gf
-    b = fromFunction (Z :. height :. width) bf
-    (Z :. height :. width :. _) = extent img
-    rf (Z :. y :. x) = img ! (Z :. y :. x :. 0)
-    gf (Z :. y :. x) = img ! (Z :. y :. x :. 1)
-    bf (Z :. y :. x) = img ! (Z :. y :. x :. 2)
-{-# INLINE toChannels #-}
-
-fromChannels :: (Source r e, Num e)
-  => (Array r DIM2 e, Array r DIM2 e, Array r DIM2 e) -> Array D DIM3 e
-fromChannels (r,g,b) =
-  let (Z :. width :. height) = extent r
-  in fromFunction (Z :. width :. height :. 3) f
-    where
-      f (Z :. y :. x :. z) = case z of
-                              0 -> r ! (Z :. y :. x)
-                              1 -> g ! (Z :. y :. x)
-                              2 -> b ! (Z :. y :. x)
-{-# INLINE fromChannels #-}

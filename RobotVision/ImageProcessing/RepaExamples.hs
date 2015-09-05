@@ -25,18 +25,21 @@ applyStencil stencil = computeP . mapStencil2 (BoundConst 0) stencil
 applyStencilClamped :: Stencil DIM2 Double -> Filter
 applyStencilClamped stencil = computeP . mapStencil2 BoundClamp stencil
 
-applyDx :: Array U DIM2 Word8 -> IO (Array U DIM2 Word8)
-applyDx = processImage derivXFilter
+applyDx :: Array U DIM2 Int -> IO (Array U DIM2 Int)
+applyDx = processImageSignMattered derivXFilter
 
-applyDy :: Array U DIM2 Word8 -> IO (Array U DIM2 Word8)
-applyDy = processImage derivYFilter
+applyDy :: Array U DIM2 Int -> IO (Array U DIM2 Int)
+applyDy = processImageSignMattered derivYFilter
 
-applyGauss :: Array U DIM2 Word8 -> IO (Array U DIM2 Word8)
-applyGauss = processImage gaussFilter
+applyGauss :: Array U DIM2 Int -> IO (Array U DIM2 Int)
+applyGauss = processImageSignMattered gaussFilter
 
 processImage :: Filter -> Array U DIM2 Word8 -> IO (Array U DIM2 Word8)
 processImage filter = promote >=> filter >=> demote
         
+processImageSignMattered :: Filter -> Array U DIM2 Int -> IO (Array U DIM2 Int)
+processImageSignMattered filter = promoteSignMattered >=> filter >=> demoteSignMattered
+
 promote :: Monad m => Array U DIM2 Word8 -> m (Array U DIM2 Double)
 promote arr
  = computeP $ A.map ffs arr
@@ -55,15 +58,22 @@ demote arr
         ffs x   =  fromIntegral (truncate x :: Int)
 {-# NOINLINE demote #-}
 
+promoteSignMattered :: Monad m => Array U DIM2 Int -> m (Array U DIM2 Double)
+promoteSignMattered arr
+ = computeP $ A.map ffs arr
+ where  {-# INLINE ffs #-}
+        ffs     :: Int -> Double
+        ffs   =  fromIntegral
+{-# NOINLINE promoteSignMattered #-}
 -- When the sign mattered (as with derivatives) we limit the range to -128->127
 -- and add 128. This means the new range is from 0->255
-demoteSignMattered :: Monad m => Array U DIM2 Double -> m (Array U DIM2 Word8)
+demoteSignMattered :: Monad m => Array U DIM2 Double -> m (Array U DIM2 Int)
 demoteSignMattered arr
  = computeP $ A.map ffs arr
 
  where  {-# INLINE ffs #-}
-        ffs     :: Double -> Word8
-        ffs x =  fromIntegral $ (truncate $ (+) 128 $ max (-128) $ min 127 x :: Int)
+        ffs     :: Double -> Int
+        ffs =  truncate
 {-# NOINLINE demoteSignMattered #-}
 
 gaussStencil :: Stencil DIM2 Double
