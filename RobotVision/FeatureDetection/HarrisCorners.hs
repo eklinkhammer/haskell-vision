@@ -31,43 +31,6 @@ import Data.Array.Repa.IO.DevIL
 
 test = id
 
---data Pixel = Pixel {
---      pt  :: DIM2, val :: Word8
---    } deriving (Show, Read, Eq, Ord)
-
---type Feature r = Array r DIM1 Pixel
-
---getFeatures :: (Source r Word8) => Array r DIM2 Word8 -> [DIM2] -> [Feature]
---getFeatures img = P.map (getFeature img)
-
---getFeature :: (Source r Word8) => Array r DIM2 Word8 -> DIM2 -> Feature
---getFeature img (Z :. y :. x) = fromFunction (Z :. 9) getPixels
---  let
---    topLeft = (Z :. (y + 1) :. (x - 1))
---    topMid = (Z :. (y + 1) :. x)
---    topRight = (Z :. (y + 1) :. (x + 1))
---    midLeft = (Z :. y :. (x - 1))
---    midMid = (Z :. y :. x)
---    midRight = (Z :. y :. (x + 1))
---    botLeft = (Z :. (y - 1) :. (x - 1))
---    botMid = (Z :. (y - 1) :. x)
---    botRight = (Z :. (y - 1) :. (x + 1)
---    getPixels (Z :. i)
---  in fromFunction (Z :. 9) getPixels
---    where 
---      | i == 0 = Pixel topLeft (img ! topLeft)
---      | i == 1 = Pixel topMid (img ! topMid)
---      | i == 2 = Pixel topRight (img ! topRight)
---      | i == 3 = Pixel midLeft (img ! midLeft)
---      | i == 4 = Pixel midMid (img ! midMid)
---      | i == 5 = Pixel midRight (img ! midRight)
---      | i == 6 = Pixel botLeft (img ! botLeft)
---      | i == 7 = Pixel botMid (img ! botMid)
---      | i == 8 = Pixel botRight (img ! botRight)
-
-
-
-
 cornerImage :: (Source r Word8) => Array r DIM3 Word8 -> Array D DIM3 Word8
 cornerImage img = 
     let

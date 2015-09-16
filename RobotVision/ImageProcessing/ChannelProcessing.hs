@@ -30,7 +30,7 @@ blurGrey = blurChannel . computeChannel
 blurChannel :: Array U DIM2 Double -> Array U DIM2 Double
 blurChannel = unsafePerformIO . applyGauss
 
-computeChannel ::  (Unbox u) => Array D DIM2 u -> Array U DIM2 u
+computeChannel ::  Array D DIM2 Double -> Array U DIM2 Double
 computeChannel = unsafePerformIO . computeP
 
 tupleToList :: (a,a,a) -> [a]

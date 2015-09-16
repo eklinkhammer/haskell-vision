@@ -2,8 +2,8 @@
 {-# OPTIONS -Wall -fno-warn-missing-signatures -fno-warn-incomplete-patterns #-}
 
 module RobotVision.ImageProcessing.DoubleProcess
-(       processImage
-    ,   Filter
+(       --processImage
+        Filter
     ,   applyStencil
     ,   applyStencilClamped
     ,   applyDy
@@ -28,24 +28,24 @@ applyStencilClamped :: Stencil DIM2 Double -> Filter
 applyStencilClamped stencil = computeP . mapStencil2 BoundClamp stencil
 
 applyDx :: Array U DIM2 Double -> IO (Array U DIM2 Double)
-applyDx = processImage derivXFilter
+applyDx = derivXFilter
 
 applyDy :: Array U DIM2 Double -> IO (Array U DIM2 Double)
-applyDy = processImage derivYFilter
+applyDy = derivYFilter
 
 applyGauss :: Array U DIM2 Double -> IO (Array U DIM2 Double)
-applyGauss = processImage gaussFilter
+applyGauss = gaussFilter
 
-processImage :: Filter -> Array U DIM2 Double -> IO (Array U DIM2 Double)
-processImage f = promote >=> f
+--processImage :: Filter -> Array U DIM2 Double -> IO (Array U DIM2 Double)
+--processImage f = promote >=> f
 
-promote :: (Monad m, Unbox n, Real n) => Array U DIM2 n -> m (Array U DIM2 Double)
-promote arr
- = computeP $ A.map ffs arr
- where  {-# INLINE ffs #-}
-        ffs     :: (Real n) => n -> Double
-        ffs     =  realToFrac
-{-# NOINLINE promote #-}
+--promote :: (Monad m, Unbox n, Real n) => Array U DIM2 n -> m (Array U DIM2 Double)
+--promote arr
+-- = computeP $ A.map ffs arr
+-- where  {-# INLINE ffs #-}
+--        ffs     :: (Real n) => n -> Double
+--        ffs     =  realToFrac
+--{-# NOINLINE promote #-}
 
 demote :: (Source r Double) => Array r DIM2 Double -> Array D DIM2 Word8
 demote = A.map (toWord)
